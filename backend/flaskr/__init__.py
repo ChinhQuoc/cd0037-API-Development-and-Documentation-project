@@ -22,8 +22,6 @@ def create_app(test_config=None):
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
-    #CORS(app, resources={r"*/api/*" : {origins: '*'}})
-
     CORS(app)
 
     """
@@ -47,12 +45,16 @@ def create_app(test_config=None):
         start = (page - 1) * 10
         end = start + 10
 
-        categories = get_all_formatted_category()
+        categories = Category.query.all()
+        formatted_categories = [category.format() for category in categories]
+
+        if len(formatted_categories) < start:
+            abort(404)
 
         return jsonify({
             'success': True,
-            'categories': categories[start:end],
-            'total_categories': len(categories)
+            'categories': formatted_categories[start:end],
+            'total_categories': len(formatted_categories)
         })
 
     """
@@ -74,16 +76,19 @@ def create_app(test_config=None):
         start = (page - 1) * 10
         end = start + 10
 
-        categories = get_all_formatted_category()
-
+        categories = Category.query.all()
+        formatted_categories = [category.format() for category in categories]
         questions = Question.query.all()
         formatted_questions = [question.format() for question in questions]
 
+        if len(formatted_questions) < start:
+            abort(404)
+
         return jsonify({
             'success': True,
-            'questions': formatted_questions[start:end],
+            'questions': formatted_questions[start:end],                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
             'total_questions': len(formatted_questions),
-            'categories': categories
+            'categories': formatted_categories
         })
 
     """
@@ -97,28 +102,21 @@ def create_app(test_config=None):
     def delete_question(id):
         id_question = int(id)
 
+        question = Question.query.filter(Question.id == id_question).one_or_none()
+
+        if question is None:
+            abort(404)
+
         try:
-            question = Question.query.filter(Question.id == id_question).one_or_none()
-
-            if question is None:
-                handle_error(404, 'Error: question not found')
-
             db.session.delete(question)
             db.session.commit()
-        except:
-            handle_error(422, 'An error occurred!')
+        except Exception as e:
+            abort(422)
 
         return jsonify({
             'success': True,
             'message': "deleted successfully"
         })
-
-        # return jsonify({
-        #     'success': True,
-        #     'deleted': id_question,
-        #     'question': current_questions,
-        #     'total_question': len(current_questions)
-        # })
 
     """
     @TODO:
@@ -142,7 +140,7 @@ def create_app(test_config=None):
             question = Question(question=new_question, answer=new_answer, category=int(new_category), difficulty=int(new_difficulty))
             question.insert()
         except:
-            handle_error(422, 'An error occurred!')
+            abort(422)
         
         return({
             'success': True,
@@ -192,8 +190,11 @@ def create_app(test_config=None):
         end = start + 10
 
         id_category = int(id)
-        categories = Category.query.filter_by(id=id_category).all()
-        formatted_categories = [category.format() for category in categories]
+        category = Category.query.filter_by(id=id_category).one_or_none()
+
+        if category is None:
+            abort(404)
+
         questions = Question.query.filter_by(category=id_category).all()
         formatted_questions = [question.format() for question in questions]
 
@@ -201,7 +202,7 @@ def create_app(test_config=None):
             'success': True,
             'questions': formatted_questions[start:end],
             'total_questions': len(formatted_questions),
-            'currentCategory': formatted_categories[0]
+            'currentCategory': category.format()
         })
 
     """
@@ -224,10 +225,14 @@ def create_app(test_config=None):
         questions = []
 
         # get all questions
-        if quiz_category['id'] is 0:
+        if quiz_category['id'] is 0: # select ALL
             questions = Question.query.all()
         else:
-            questions = Question.query.filter_by(category=quiz_category['id']).all()
+            category = Category.query.filter_by(id=quiz_category['id']).one_or_none()
+            if category is None:
+                abort(404)
+            else:
+                questions = Question.query.filter_by(category=quiz_category['id']).all()
 
         format_questions =  [question.format() for question in questions]
         if len(format_questions) != 0:
@@ -237,8 +242,11 @@ def create_app(test_config=None):
                 data = [question for question in format_questions if question['id'] not in previous_questions]
                 if len(data) != 0:
                     result = data[0]
+        else:
+            abort(404)
 
         return jsonify({
+            'success': True,
             'question': result
         })
 
@@ -247,14 +255,27 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
-    def handle_error(code, message):
-        error_message = ({'message': message})
-        abort(Response(error_message, code))
-
-    def get_all_formatted_category():
-        categories = Category.query.all()
-        formatted_categories = [category.format() for category in categories]
-        return formatted_categories
+    @app.errorhandler(404)
+    def not_found(err):
+        return (
+            jsonify({
+                'success': False,
+                'error': 404,
+                'message': err.description if err.description else 'Resource not found!'
+            }),
+            404
+        )
+    
+    @app.errorhandler(422)
+    def occur_error(err):
+        return (
+            jsonify({
+                'success': False,
+                'error': 422,
+                'message': err.description if err.description else 'An error occurred!'
+            }),
+            422
+        )
 
     return app
 
