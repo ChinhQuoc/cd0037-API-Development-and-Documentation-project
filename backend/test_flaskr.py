@@ -68,13 +68,13 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["error"], 404)
         self.assertTrue(data["message"])
 
-    # def test_delete_question(self):
-    #     res = self.client().delete('/questions/31')
-    #     data = json.loads(res.data)
+    def test_delete_question(self):
+        res = self.client().delete('/questions/31')
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertEqual(data["message"], 'deleted successfully')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertEqual(data["message"], 'deleted successfully')
 
     def test_error_404_when_delete_question(self):
         res = self.client().delete('/questions/100')
