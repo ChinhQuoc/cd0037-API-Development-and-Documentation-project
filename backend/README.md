@@ -78,6 +78,8 @@ One note before you delve into your tasks: for each endpoint, you are expected t
   - `success`: A boolean indicating the request status.
   - `categories`: A list of category objects, each containing `id` and `type`.
   - `total_categories`: An integer representing the total number of categories available.
+- Possible Responses:
+  - Returns a `404` status if the categories with the length is smaller than `start`.
 
 ```json
 {
@@ -122,6 +124,8 @@ One note before you delve into your tasks: for each endpoint, you are expected t
   - `questions`: A list of question objects, each containing `id`, `question`, `answer`, `category`, and `difficulty`.
   - `total_questions`: An integer representing the total number of questions available.
   - `categories`: A list of category objects, each containing `id` and `type`.
+- Possible Responses:
+  - Returns a `404` status if the question with the length is smaller than `start`.
 
 ```json
 {
@@ -250,7 +254,7 @@ One note before you delve into your tasks: for each endpoint, you are expected t
 - Request Body: A JSON object containing:
   - `question`: A string representing the text of the question.
   - `answer`: A string representing the correct answer to the question.
-  - `difficulty`: An integer representing the difficulty level (1 to 5).
+  - `difficulty`: An integer representing the difficulty level.
   - `category`: An integer representing the ID of the category to which the question belongs.
 - Returns: An object with the following keys:
   - `success`: A boolean indicating the request status.
