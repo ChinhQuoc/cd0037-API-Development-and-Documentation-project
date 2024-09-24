@@ -6,15 +6,17 @@ from flask import jsonify
 
 from flaskr import create_app
 from models import setup_db, Question, Category
-
+from settings import DB_NAME_TEST, DB_USER, DB_PASSWORD
 
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
     def setUp(self):
         """Define test variables and initialize app."""
-        self.database_name = "trivia_test"
-        self.database_path = "postgresql://postgres:12345@{}/{}".format('localhost:5432', self.database_name)
+        self.database_name = DB_NAME_TEST
+        self.database_user = DB_USER
+        self.database_password = DB_PASSWORD
+        self.database_path = "postgresql://{}:{}@{}/{}".format(self.database_user, self.database_password, 'localhost:5432', self.database_name)
         
         self.app = create_app({
             "SQLALCHEMY_DATABASE_URI": self.database_path
@@ -68,9 +70,9 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["error"], 404)
         self.assertTrue(data["message"])
 
-    # def test_delete_question(self):
-    #     res = self.client().delete('/questions/31')
-    #     data = json.loads(res.data)
+    def test_delete_question(self):
+        res = self.client().delete('/questions/47')
+        data = json.loads(res.data)
 
     #     self.assertEqual(res.status_code, 200)
     #     self.assertEqual(data["success"], True)
